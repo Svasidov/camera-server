@@ -6,9 +6,8 @@ os.makedirs("photos", exist_ok=True)
 
 @app.after_request
 def add_cors_headers(response):
-    # Разрешаем запросы со всех сайтов (чтобы точно прошло)
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS, GET"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     return response
 
