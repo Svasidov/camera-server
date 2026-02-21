@@ -10,6 +10,7 @@ ADMIN_KEY = "1111"
 # Разрешаем запросы ТОЛЬКО с твоего сайта (CORS)
 ALLOWED_ORIGINS = {"https://svasidov.github.io"}
 
+
 @app.after_request
 def add_cors_headers(response):
     origin = request.headers.get("Origin")
