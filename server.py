@@ -5,7 +5,7 @@ app = Flask(__name__)
 os.makedirs("photos", exist_ok=True)
 
 ALLOWED_ORIGINS = {"https://svasidov.github.io"}
-ADMIN_KEY = os.environ.get("ADMIN_KEY", "12345")  # поменяешь в Render
+ADMIN_KEY = "1111"  # поменяешь в Render
 
 @app.after_request
 def add_cors_headers(response):
