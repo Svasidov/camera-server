@@ -4,8 +4,11 @@ import base64, os, time
 app = Flask(__name__)
 os.makedirs("photos", exist_ok=True)
 
+# ПАРОЛЬ ДЛЯ АДМИНКИ (поменяй на свой)
+ADMIN_KEY = "1111"
+
+# Разрешаем запросы ТОЛЬКО с твоего сайта (CORS)
 ALLOWED_ORIGINS = {"https://svasidov.github.io"}
-ADMIN_KEY = "1111"  # поменяешь в Render
 
 @app.after_request
 def add_cors_headers(response):
@@ -34,6 +37,7 @@ def upload():
     img_b64 = data.get("image", "")
     if "," in img_b64:
         img_b64 = img_b64.split(",", 1)[1]
+
     if not img_b64:
         return jsonify({"status": "error", "msg": "no image"}), 400
 
@@ -44,10 +48,11 @@ def upload():
 
     filename = f"{int(time.time())}.jpg"
     path = os.path.join("photos", filename)
+
     with open(path, "wb") as f:
         f.write(img)
 
-    # Пользователю НЕ даём ссылку
+    # Пользователю ссылку не отдаём
     return jsonify({"status": "ok"})
 
 @app.route("/admin", methods=["GET"])
@@ -73,7 +78,6 @@ def admin():
     <title>Admin</title></head>
     <body style="font-family:system-ui;background:#0b0f14;color:#e8eef6;padding:16px">
       <h2>📸 Фото ({len(files)})</h2>
-      <p>Открывай файлы по ссылкам ниже.</p>
       <ol>{items}</ol>
     </body></html>
     """
