@@ -1,14 +1,11 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, abort
 import base64, os, time
 
 app = Flask(__name__)
 os.makedirs("photos", exist_ok=True)
 
-ALLOWED_ORIGINS = {
-    "https://svasidov.github.io",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-}
+ALLOWED_ORIGINS = {"https://svasidov.github.io"}
+ADMIN_KEY = os.environ.get("ADMIN_KEY", "12345")  # поменяешь в Render
 
 @app.after_request
 def add_cors_headers(response):
@@ -35,10 +32,8 @@ def upload():
 
     data = request.get_json(silent=True) or {}
     img_b64 = data.get("image", "")
-
     if "," in img_b64:
         img_b64 = img_b64.split(",", 1)[1]
-
     if not img_b64:
         return jsonify({"status": "error", "msg": "no image"}), 400
 
@@ -49,12 +44,39 @@ def upload():
 
     filename = f"{int(time.time())}.jpg"
     path = os.path.join("photos", filename)
-
     with open(path, "wb") as f:
         f.write(img)
 
-    # Полная ссылка на фото
-    base = request.host_url.rstrip("/")
-    photo_url = f"{base}/photos/{filename}"
+    # Пользователю НЕ даём ссылку
+    return jsonify({"status": "ok"})
 
-    return jsonify({"status": "ok", "photo_url": photo_url})
+@app.route("/admin", methods=["GET"])
+def admin():
+    key = request.args.get("key", "")
+    if key != ADMIN_KEY:
+        abort(403)
+
+    files = sorted(
+        (f for f in os.listdir("photos") if f.lower().endswith(".jpg")),
+        reverse=True
+    )
+
+    base = request.host_url.rstrip("/")
+    items = "\n".join(
+        f'<li><a target="_blank" rel="noopener" href="{base}/photos/{f}">{f}</a></li>'
+        for f in files
+    ) or "<li>Пока нет фото</li>"
+
+    return f"""
+    <!doctype html>
+    <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Admin</title></head>
+    <body style="font-family:system-ui;background:#0b0f14;color:#e8eef6;padding:16px">
+      <h2>📸 Фото ({len(files)})</h2>
+      <p>Открывай файлы по ссылкам ниже.</p>
+      <ol>{items}</ol>
+    </body></html>
+    """
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
